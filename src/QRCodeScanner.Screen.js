@@ -33,15 +33,16 @@ export default class QRCodeScanner extends Component<Props> {
       flashOn: false,
       longitude: 0,
       latitude: 0,
+      accuracy: 0,
       backCamera: true
     }
   }
 
   static navigationOptions = ({navigation}) => ({
     headerLeft: <Button title={'Back'} onPress={() => {
-      if (DataManager.getInstance()._rootTag != -1) {
-        console.log('CategoryListScreen app rootTag ' + DataManager.getInstance()._rootTag)
-        ReactManager.dismissPresentedViewController(DataManager.getInstance()._rootTag)
+      if (Config.rootTag != -1) {
+        console.log('CategoryListScreen app rootTag ' + Config.rootTag)
+        ReactManager.dismissPresentedViewController(Config.rootTag)
       }
     }}></Button>
   })
@@ -55,15 +56,12 @@ export default class QRCodeScanner extends Component<Props> {
     navigator.geolocation.clearWatch(this.watchId)
   }
 
-  // alertButtons = [
-  //   {
-  //     text: 'OK',
-  //     onPress: () => this.goBackToLifeUp()
-  //   }
-  // ]
-
   goBackToLifeUp = () => {
     console.log('Go back to lifeup')
+    if (Config.rootTag != -1) {
+      console.log('goBackToLifeUp app rootTag ' + Config.rootTag)
+      ReactManager.dismissPresentedViewController(Config.rootTag)
+    }
   }
 
   sendData (qrcode) {
@@ -76,9 +74,7 @@ export default class QRCodeScanner extends Component<Props> {
         formData.append('code', qrcode)
         formData.append('lng', this.state.longitude)
         formData.append('lat', this.state.latitude)
-        formData.append('code', 'gAAAAABashvV3Tzlkiya6MQ5cE6JF84I8l_9_219JgAa9RwapWxZNKNMOTdjkJnPcnb0eo8G8CDvy2XP8b945JY0BDtR2pdz_LIMFqu5mGTw85TLjKjfN9x08SuslODHZr3JfM9509Qn')
-        formData.append('lng', '103.845603')
-        formData.append('lat', '1.315594')
+        formData.append('accuracy', this.state.accuracy)
         fetch(url, {
           method: 'POST',
           headers: {
@@ -96,6 +92,8 @@ export default class QRCodeScanner extends Component<Props> {
               } else {
                 reject('Server error, Please try again later')
               }
+            }).catch((error) => {
+              reject('Error: ' + error.message)
             })
           }
         }).catch((error) => {
@@ -112,7 +110,8 @@ export default class QRCodeScanner extends Component<Props> {
       console.log(position)
       this.setState({
         longitude: position.coords.longitude,
-        latitude: position.coords.latitude
+        latitude: position.coords.latitude,
+        accuracy: position.coords.accuracy
       })
     }
 
@@ -137,16 +136,18 @@ export default class QRCodeScanner extends Component<Props> {
     const callback = async () => {
       try {
         let result = await this.sendData(e.data)
-        Alert.alert('Door openned')
         this.goBackToLifeUp()
       } catch (error) {
-        Alert.alert('Error: ' + error)
+        Alert.alert('Error', 'Error: ' + error, [{
+          text: 'Ok',
+          onPress: () => this.goBackToLifeUp()
+        }])
       }
       setTimeout(() => {
         this.setState({
           processing: false
         })
-      }, 10000)
+      }, 5000)
 
     }
     this.setState({qrCode: e.data}, callback)
