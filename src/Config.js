@@ -3,5 +3,4 @@ export var Config = {
   baseURL: '',
   rootTag: -1,
 
-
 }

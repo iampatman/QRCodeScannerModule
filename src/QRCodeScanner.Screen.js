@@ -41,7 +41,7 @@ export default class QRCodeScanner extends Component<Props> {
   static navigationOptions = ({navigation}) => ({
     headerLeft: <Button title={'Back'} onPress={() => {
       if (Config.rootTag != -1) {
-        console.log('CategoryListScreen app rootTag ' + Config.rootTag)
+        console.log('QRCodeScanner app rootTag ' + Config.rootTag)
         ReactManager.dismissPresentedViewController(Config.rootTag)
       }
     }}></Button>
@@ -57,7 +57,7 @@ export default class QRCodeScanner extends Component<Props> {
   }
 
   goBackToLifeUp = () => {
-    console.log('Go back to lifeup')
+    console.log('Go back to lifeup: rootTag ' + Config.rootTag)
     if (Config.rootTag != -1) {
       console.log('goBackToLifeUp app rootTag ' + Config.rootTag)
       ReactManager.dismissPresentedViewController(Config.rootTag)
