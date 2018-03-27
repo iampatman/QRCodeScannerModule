@@ -11,6 +11,7 @@ import {
   Alert,
   ActivityIndicator,
   Button,
+  Linking,
   NativeModules
 } from 'react-native'
 import Camera from 'react-native-camera'
@@ -26,6 +27,7 @@ export default class QRCodeScanner extends Component<Props> {
   constructor (props) {
     super(props)
     this.watchId = 0
+    this.locationSettingRequestShowing = false
 
     this.state = {
       processing: false,
@@ -34,7 +36,7 @@ export default class QRCodeScanner extends Component<Props> {
       longitude: 0,
       latitude: 0,
       accuracy: 0,
-      backCamera: true
+      backCamera: true,
     }
   }
 
@@ -114,10 +116,36 @@ export default class QRCodeScanner extends Component<Props> {
         accuracy: position.coords.accuracy
       })
     }
-
+    const goToSetting = () => {
+      this.locationSettingRequestShowing = false
+      Linking.canOpenURL('app-settings:').then(supported => {
+        if (!supported) {
+          console.log('Can\'t handle settings url')
+        } else {
+          return Linking.openURL('app-settings:')
+        }
+      }).catch(err => console.error('An error occurred', err))
+    }
     const errorCallback = (error) => {
       console.log(error)
-      Alert.alert('Error', 'Error code: ' + error.code + ': ' + error.message)
+      if (error.code == 1) {
+        if (this.locationSettingRequestShowing == false) {
+          this.locationSettingRequestShowing = true
+          Alert.alert('App requires location info', 'Would you like to open the app setting?',
+            [
+              {text: 'Yes', onPress: () => goToSetting()},
+              {
+                text: 'Cancel', style: 'cancel', onPress: () => {
+                this.locationSettingRequestShowing = false
+                this.goBackToLifeUp()
+              }
+              },
+            ], {cancelable: true})
+        }
+
+      } else {
+        Alert.alert('Notice', 'Error code: ' + error.code + ': ' + error.message)
+      }
     }
     const options = {enableHighAccuracy: true, timeout: 20000, maximumAge: 1000, distanceFilter: 50}
     this.watchId = navigator.geolocation.watchPosition(successCallback, errorCallback, options)
@@ -126,7 +154,6 @@ export default class QRCodeScanner extends Component<Props> {
 
   onBarCodeRead = (e) => {
     console.log('onBarCodeRead processing: ' + this.state.processing)
-
     if (this.state.processing === true) {
       return
     }
@@ -138,7 +165,7 @@ export default class QRCodeScanner extends Component<Props> {
         let result = await this.sendData(e.data)
         this.goBackToLifeUp()
       } catch (error) {
-        Alert.alert('Error', 'Error: ' + error, [{
+        Alert.alert('Notice', 'Error: ' + error, [{
           text: 'Ok',
           onPress: () => this.goBackToLifeUp()
         }])
