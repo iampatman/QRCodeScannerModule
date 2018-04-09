@@ -30,6 +30,7 @@ export default class QRCodeScanner extends Component<Props> {
     this.locationSettingRequestShowing = false
 
     this.state = {
+      inForeground: true,
       processing: false,
       qrCode: '',
       flashOn: false,
@@ -49,13 +50,21 @@ export default class QRCodeScanner extends Component<Props> {
     }}></Button>
   })
 
+
+
   componentDidMount () {
     this.getLocation()
+    this.setState({
+      inForeground: true
+    })
   }
 
   componentWillUnmount () {
-    console.log('componentWillUnmount: ' + this.watchId)
+    this.setState({
+      inForeground: false
+    })
     navigator.geolocation.clearWatch(this.watchId)
+
   }
 
   goBackToLifeUp = () => {
@@ -217,7 +226,7 @@ export default class QRCodeScanner extends Component<Props> {
         </View>
         <Camera
           style={styles.preview}
-          onBarCodeRead={this.onBarCodeRead}
+          onBarCodeRead={this.state.inForeground ? this.onBarCodeRead : null}
           type={cameraType}
           ref={cam => this.camera = cam}
           aspect={Camera.constants.Aspect.fill}

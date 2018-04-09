@@ -18,7 +18,7 @@ const RootNavigator = StackNavigator({
     screen: QRCodeScanner,
     navigationOptions: {
       title: 'Scan QR Code',
-      header: null
+      // header: null
     }
   }
 }, {})
