@@ -50,16 +50,17 @@ export default class QRCodeScanner extends Component<Props> {
     }}></Button>
   })
 
-
-
   componentDidMount () {
     this.getLocation()
+    console.log('componentDidMount is called')
+
     this.setState({
       inForeground: true
     })
   }
 
   componentWillUnmount () {
+    console.log('componentWillUnmount is called')
     this.setState({
       inForeground: false
     })
@@ -68,6 +69,9 @@ export default class QRCodeScanner extends Component<Props> {
   }
 
   goBackToLifeUp = () => {
+    this.setState({
+      inForeground: false
+    })
     console.log('Go back to lifeup: rootTag ' + Config.rootTag)
     if (Config.rootTag != -1) {
       console.log('goBackToLifeUp app rootTag ' + Config.rootTag)
