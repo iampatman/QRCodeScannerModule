@@ -12,7 +12,8 @@ import {
   ActivityIndicator,
   Button,
   Linking,
-  NativeModules
+  NativeModules,
+  Platform
 } from 'react-native'
 import Camera from 'react-native-camera'
 import { styles } from './QRCodeScanner.Style'
@@ -45,7 +46,11 @@ export default class QRCodeScanner extends Component<Props> {
     headerLeft: <Button title={'Back'} onPress={() => {
       if (Config.rootTag != -1) {
         console.log('QRCodeScanner app rootTag ' + Config.rootTag)
-        ReactManager.dismissPresentedViewController(Config.rootTag)
+        if (Platform.OS === 'ios'){
+          ReactManager.dismissPresentedViewController(Config.rootTag)
+        } else {
+          NativeModules.QRActivityStarter.goback_LifeUp()
+        }
       }
     }}></Button>
   })
@@ -160,7 +165,7 @@ export default class QRCodeScanner extends Component<Props> {
         Alert.alert('Notice', 'Error code: ' + error.code + ': ' + error.message)
       }
     }
-    const options = {enableHighAccuracy: true, timeout: 20000, maximumAge: 1000, distanceFilter: 50}
+    const options = {enableHighAccuracy: false, timeout: 20000, maximumAge: 1000, distanceFilter: 50}
     this.watchId = navigator.geolocation.watchPosition(successCallback, errorCallback, options)
     console.log('watchPosition: ' + this.watchId)
   }
