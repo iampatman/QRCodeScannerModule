@@ -9,19 +9,19 @@ import {
   Text,
   View,
   Alert,
-  ActivityIndicator,
   Button,
-  Linking,
+  Platform,
   NativeModules,
-  Platform
+  Linking
 } from 'react-native'
 import Camera from 'react-native-camera'
 import { styles } from './QRCodeScanner.Style'
 import { Config } from './Config'
+import Loader from './loader/Loader'
+import { sendData } from './APIEngine'
 
 const {ReactManager} = NativeModules
 
-type Props = {};
 export default class QRCodeScanner extends Component<Props> {
   camera: Camera
 
@@ -34,7 +34,8 @@ export default class QRCodeScanner extends Component<Props> {
       inForeground: true,
       processing: false,
       qrCode: '',
-      flashOn: false,
+      locationLoading: Platform.OS === 'android' ? true : false,
+      // flashOn: false,
       longitude: 0,
       latitude: 0,
       accuracy: 0,
@@ -42,23 +43,37 @@ export default class QRCodeScanner extends Component<Props> {
     }
   }
 
+  static goBackStaticFunc = () => {
+    if (Config.rootTag != -1) {
+      console.log('goBackToLifeUp app rootTag ' + Config.rootTag)
+      if (Platform.OS === 'ios') {
+        ReactManager.dismissPresentedViewController(Config.rootTag)
+      } else {
+        NativeModules.QRActivityStarter.goback_LifeUp()
+      }
+    }
+  }
+
+  goToSetting = () => {
+    this.locationSettingRequestShowing = false
+    Linking.canOpenURL('app-settings:').then(supported => {
+      if (!supported) {
+        console.log('Can\'t handle settings url')
+      } else {
+        return Linking.openURL('app-settings:')
+      }
+    }).catch(err => console.error('An error occurred', err))
+  }
+
   static navigationOptions = ({navigation}) => ({
     headerLeft: <Button title={'Back'} onPress={() => {
-      if (Config.rootTag != -1) {
-        console.log('QRCodeScanner app rootTag ' + Config.rootTag)
-        if (Platform.OS === 'ios'){
-          ReactManager.dismissPresentedViewController(Config.rootTag)
-        } else {
-          NativeModules.QRActivityStarter.goback_LifeUp()
-        }
-      }
+      QRCodeScanner.goBackStaticFunc()
     }}></Button>
   })
 
   componentDidMount () {
     this.getLocation()
     console.log('componentDidMount is called')
-
     this.setState({
       inForeground: true
     })
@@ -67,7 +82,8 @@ export default class QRCodeScanner extends Component<Props> {
   componentWillUnmount () {
     console.log('componentWillUnmount is called')
     this.setState({
-      inForeground: false
+      inForeground: false,
+      locationLoading: false
     })
     navigator.geolocation.clearWatch(this.watchId)
 
@@ -75,118 +91,91 @@ export default class QRCodeScanner extends Component<Props> {
 
   goBackToLifeUp = () => {
     this.setState({
-      inForeground: false
+      inForeground: false,
+      locationLoading: false,
+      processing: false
+    }, () => {
+      console.log('Go back to lifeup: rootTag ' + Config.rootTag)
+      QRCodeScanner.goBackStaticFunc()
     })
-    console.log('Go back to lifeup: rootTag ' + Config.rootTag)
-    if (Config.rootTag != -1) {
-      console.log('goBackToLifeUp app rootTag ' + Config.rootTag)
-      ReactManager.dismissPresentedViewController(Config.rootTag)
-    }
-  }
-
-  sendData (qrcode) {
-    return new Promise((resolve, reject) => {
-        if (this.state.qrCode === '' || this.state.longitude === 0 || this.state.latitude === 0) {
-          reject('Data invalid')
-        }
-        let url = Config.baseURL + 'qr/door/open'
-        var formData = new FormData()
-        formData.append('code', qrcode)
-        formData.append('lng', this.state.longitude)
-        formData.append('lat', this.state.latitude)
-        formData.append('accuracy', this.state.accuracy)
-        fetch(url, {
-          method: 'POST',
-          headers: {
-            Authorization: Config.token
-          },
-          body: formData
-        }).then((response) => {
-          console.log('HTTP Status: ' + response.status)
-          if (response.status === 200) {
-            resolve()
-          } else {
-            response.json().then((json) => {
-              if (json.detail != null) {
-                reject(json.detail)
-              } else {
-                reject('Server error, Please try again later')
-              }
-            }).catch((error) => {
-              reject('Error: ' + error.message)
-            })
-          }
-        }).catch((error) => {
-          console.log(error.message)
-          reject('Server error, Please try again later')
-        })
-      }
-    )
 
   }
 
   getLocation = () => {
     const successCallback = (position) => {
-      console.log(position)
+      console.log('Location successCallback' + position)
       this.setState({
+        locationLoading: false,
         longitude: position.coords.longitude,
         latitude: position.coords.latitude,
         accuracy: position.coords.accuracy
       })
     }
-    const goToSetting = () => {
-      this.locationSettingRequestShowing = false
-      Linking.canOpenURL('app-settings:').then(supported => {
-        if (!supported) {
-          console.log('Can\'t handle settings url')
-        } else {
-          return Linking.openURL('app-settings:')
-        }
-      }).catch(err => console.error('An error occurred', err))
-    }
+
     const errorCallback = (error) => {
-      console.log(error)
+      console.log('Location errorCallback' + error)
+      this.setState({
+        locationLoading: false
+      })
       if (error.code == 1) {
         if (this.locationSettingRequestShowing == false) {
           this.locationSettingRequestShowing = true
           Alert.alert('App requires location info', 'Would you like to open the app setting?',
             [
-              {text: 'Yes', onPress: () => goToSetting()},
+              {text: 'Yes', onPress: () => this.goToSetting()},
               {
                 text: 'Cancel', style: 'cancel', onPress: () => {
                 this.locationSettingRequestShowing = false
                 this.goBackToLifeUp()
               }
               },
-            ], {cancelable: true})
+            ], {cancelable: false})
         }
 
       } else {
-        Alert.alert('Notice', 'Error code: ' + error.code + ': ' + error.message)
+        Alert.alert('Notice', 'Error code: ' + error.code + ': ' + error.message, [
+          {
+            text: 'OK',
+            onPress: () => {
+              this.goBackToLifeUp()
+            }
+          }
+        ], {cancelable: false})
       }
     }
     const options = {enableHighAccuracy: false, timeout: 20000, maximumAge: 1000, distanceFilter: 50}
     this.watchId = navigator.geolocation.watchPosition(successCallback, errorCallback, options)
+    navigator.geolocation.getCurrentPosition(successCallback, errorCallback, options)
     console.log('watchPosition: ' + this.watchId)
   }
 
   onBarCodeRead = (e) => {
     console.log('onBarCodeRead processing: ' + this.state.processing)
-    if (this.state.processing === true) {
+    if (this.state.processing === true || this.state.locationLoading == true) {
       return
     }
     this.setState({
-      processing: true
+      processing: true,
     })
     const callback = async () => {
       try {
-        let result = await this.sendData(e.data)
+        let data = {
+          ...this.state,
+          qrCode: e.data
+        }
+        await sendData(data)
         this.goBackToLifeUp()
+        console.log('unlock the door successfully')
       } catch (error) {
-        Alert.alert('Notice', 'Error: ' + error, [{
+        Alert.alert('Notice', '' + error, [{
           text: 'Ok',
-          onPress: () => this.goBackToLifeUp()
-        }])
+          onPress: () => {
+            this.goBackToLifeUp()
+            this.setState({
+              processing: false
+            }, () => {this.goBackToLifeUp()})
+          }
+        }], {cancelable: false})
       }
       setTimeout(() => {
         this.setState({
@@ -195,7 +184,8 @@ export default class QRCodeScanner extends Component<Props> {
       }, 5000)
 
     }
-    this.setState({qrCode: e.data}, callback)
+    callback()
+    // this.setState({qrCode: e.data}, callback)
   }
 
   renderMaskView = () => {
@@ -205,9 +195,7 @@ export default class QRCodeScanner extends Component<Props> {
         <View style={styles.maskViewInnerMiddle}>
           <View style={styles.maskViewInnerMiddleOutside}></View>
           <View style={styles.qrcodeWindow}>
-            <ActivityIndicator size={'large'} color={'black'} hidesWhenStopped={true}
-                               animating={this.state.processing}/>
-
+            <Loader loading={this.state.processing} text={'Unlocking'}/>
           </View>
           <View style={styles.maskViewInnerMiddleOutside}></View>
         </View>
@@ -230,6 +218,7 @@ export default class QRCodeScanner extends Component<Props> {
 
     return (
       <View style={styles.container}>
+        <Loader loading={this.state.locationLoading} text={'Getting location info'}/>
         <View>
           <Text style={styles.welcome}>Long: {this.state.longitude} Lat: {this.state.latitude} </Text>
         </View>
@@ -244,7 +233,6 @@ export default class QRCodeScanner extends Component<Props> {
           // torchMode={Camera.constants.TorchMode.on}
         >
           {this.renderMaskView()}
-
         </Camera>
       </View>
     )

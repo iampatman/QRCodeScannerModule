@@ -5,8 +5,8 @@
   "scripts": {
     "start": "node node_modules/react-native/local-cli/cli.js start",
     "test": "jest",
-    "build:ios": "node node_modules/react-native/local-cli/cli.js bundle --entry-file='index.js' --bundle-output='./ios/main.jsbundle' --dev=false --platform='ios' --assets-dest='./ios'",
-    "build:android": "node node_modules/react-native/local-cli/cli.js bundle --entry-file='index.js' --bundle-output='./android/main.jsbundle' --dev=false --platform='android' --assets-dest='./android'"
+    "build:ios": "node node_modules/react-native/local-cli/cli.js bundle --entry-file='index.js' --bundle-output='./ios/QRCodeScan.jsbundle' --dev=false --platform='ios' --assets-dest='./ios'",
+    "build:android": "node node_modules/react-native/local-cli/cli.js bundle --entry-file='index.js' --bundle-output='./android/main.jsbundle.android' --dev=false --platform='android' --assets-dest='./android'"
   },
   "dependencies": {
     "react": "16.2.0",
