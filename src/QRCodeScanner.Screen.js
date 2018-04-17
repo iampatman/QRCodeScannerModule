@@ -165,6 +165,9 @@ export default class QRCodeScanner extends Component<Props> {
         }
         await sendData(data)
         this.goBackToLifeUp()
+        this.setState({
+          processing: false
+        }, () => {this.goBackToLifeUp()})
         console.log('unlock the door successfully')
       } catch (error) {
         Alert.alert('Notice', '' + error, [{
@@ -219,9 +222,6 @@ export default class QRCodeScanner extends Component<Props> {
     return (
       <View style={styles.container}>
         <Loader loading={this.state.locationLoading} text={'Getting location info'}/>
-        <View>
-          <Text style={styles.welcome}>Long: {this.state.longitude} Lat: {this.state.latitude} </Text>
-        </View>
         <Camera
           style={styles.preview}
           onBarCodeRead={this.state.inForeground ? this.onBarCodeRead : null}
