@@ -29,7 +29,7 @@ export const sendData = async (data) => {
               reject('Server error, Please try again later')
             }
           }).catch((error) => {
-            reject('Error: ' + error.message)
+            reject('Server error, Please try again later', 'Detail: ' + error.message)
           })
         }
       }).catch((error) => {
