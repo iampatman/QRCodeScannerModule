@@ -51,6 +51,7 @@ export default class QRCodeScanner extends Component<Props> {
       } else {
         NativeModules.QRActivityStarter.goback_LifeUp()
       }
+      
     }
   }
 
@@ -164,10 +165,15 @@ export default class QRCodeScanner extends Component<Props> {
           qrCode: e.data
         }
         await sendData(data)
-        this.goBackToLifeUp()
+        Alert.alert('Success', 'The door is opened', [], {cancelable: false})
+        setTimeout(() => {
         this.setState({
           processing: false
-        }, () => {this.goBackToLifeUp()})
+        }, () => {
+          setTimeout(() => {
+            this.goBackToLifeUp()}, 2000)
+          }, 2000)
+})
         console.log('unlock the door successfully')
       } catch (error) {
         Alert.alert('Notice', '' + error, [{
@@ -190,7 +196,6 @@ export default class QRCodeScanner extends Component<Props> {
     callback()
     // this.setState({qrCode: e.data}, callback)
   }
-
   renderMaskView = () => {
     return (
       <View style={styles.maskViewOuter}>
@@ -222,6 +227,7 @@ export default class QRCodeScanner extends Component<Props> {
     return (
       <View style={styles.container}>
         <Loader loading={this.state.locationLoading} text={'Getting location info'}/>
+
         <Camera
           style={styles.preview}
           onBarCodeRead={this.state.inForeground ? this.onBarCodeRead : null}
