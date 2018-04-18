@@ -27,7 +27,7 @@ export default class App extends Component<Props> {
   constructor (props) {
     super(props)
     Config.rootTag = props.rootTag ? props.rootTag : '1'
-    Config.token = props.token ? props.token : 'Token 07fffe176423a678c81ffb803d51ed305f7fcd9a'
+    Config.token = props.token ? props.token : 'Token 580b062a5529a28b4f7348c798fa2331a21cc6a0'
     // Config.baseURL = props.base_url ? props.base_url : 'http://13.250.247.107/v1/'
     Config.baseURL = props.base_url ? props.base_url : 'https://api.lifeup.com.sg/v1/'
     console.log('App rootTag loaded' + Config.rootTag)

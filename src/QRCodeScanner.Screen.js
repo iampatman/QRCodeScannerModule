@@ -34,7 +34,7 @@ export default class QRCodeScanner extends Component<Props> {
       inForeground: true,
       processing: false,
       qrCode: '',
-      locationLoading: Platform.OS === 'android' ? true : false,
+      locationLoading: false,
       // flashOn: false,
       longitude: 0,
       latitude: 0,
@@ -51,7 +51,7 @@ export default class QRCodeScanner extends Component<Props> {
       } else {
         NativeModules.QRActivityStarter.goback_LifeUp()
       }
-      
+
     }
   }
 
@@ -152,7 +152,7 @@ export default class QRCodeScanner extends Component<Props> {
 
   onBarCodeRead = (e) => {
     console.log('onBarCodeRead processing: ' + this.state.processing)
-    if (this.state.processing === true || this.state.locationLoading == true) {
+    if (this.state.processing === true) {
       return
     }
     this.setState({
@@ -167,19 +167,20 @@ export default class QRCodeScanner extends Component<Props> {
         await sendData(data)
         Alert.alert('Success', 'The door is opened', [], {cancelable: false})
         setTimeout(() => {
-        this.setState({
-          processing: false
-        }, () => {
-          setTimeout(() => {
-            this.goBackToLifeUp()}, 2000)
+          this.setState({
+            processing: false
+          }, () => {
+            setTimeout(() => {
+              this.goBackToLifeUp()
+            }, 2000)
           }, 2000)
-})
+        })
         console.log('unlock the door successfully')
       } catch (error) {
         Alert.alert('Notice', '' + error, [{
           text: 'Ok',
           onPress: () => {
-            this.goBackToLifeUp()
+            // this.goBackToLifeUp()
             this.setState({
               processing: false
             }, () => {this.goBackToLifeUp()})
@@ -194,7 +195,6 @@ export default class QRCodeScanner extends Component<Props> {
 
     }
     callback()
-    // this.setState({qrCode: e.data}, callback)
   }
   renderMaskView = () => {
     return (
@@ -226,7 +226,7 @@ export default class QRCodeScanner extends Component<Props> {
 
     return (
       <View style={styles.container}>
-        <Loader loading={this.state.locationLoading} text={'Getting location info'}/>
+        {/*<Loader loading={this.state.locationLoading} text={'Getting location info'}/>*/}
 
         <Camera
           style={styles.preview}
