@@ -36,6 +36,7 @@ export default class QRCodeScanner extends Component<Props> {
       qrCode: '',
       locationLoading: false,
       // flashOn: false,
+      locationCompleted: false,
       longitude: 0,
       latitude: 0,
       accuracy: 0,
@@ -107,6 +108,7 @@ export default class QRCodeScanner extends Component<Props> {
       console.log('Location successCallback' + position)
       this.setState({
         locationLoading: false,
+        locationCompleted: true,
         longitude: position.coords.longitude,
         latitude: position.coords.latitude,
         accuracy: position.coords.accuracy
@@ -116,7 +118,8 @@ export default class QRCodeScanner extends Component<Props> {
     const errorCallback = (error) => {
       console.log('Location errorCallback' + error)
       this.setState({
-        locationLoading: false
+        locationLoading: false,
+        locationCompleted: true,
       })
       if (error.code == 1) {
         if (this.locationSettingRequestShowing == false) {
@@ -155,6 +158,19 @@ export default class QRCodeScanner extends Component<Props> {
     if (this.state.processing === true) {
       return
     }
+    while (this.state.locationCompleted === false) {
+
+    }
+
+    if (this.state.longitude === 0 || this.state.latitude === 0) {
+      Alert.alert('Notice', 'Loading location info failed', [{
+        text: 'Ok',
+        onPress: () => {
+          this.goBackToLifeUp()
+        }
+      }], {cancelable: false})
+    }
+
     this.setState({
       processing: true,
     })
@@ -187,11 +203,11 @@ export default class QRCodeScanner extends Component<Props> {
           }
         }], {cancelable: false})
       }
-      setTimeout(() => {
-        this.setState({
-          processing: false
-        })
-      }, 5000)
+      // setTimeout(() => {
+      //   this.setState({
+      //     processing: false
+      //   })
+      // }, 10000)
 
     }
     callback()
