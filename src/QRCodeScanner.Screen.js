@@ -111,7 +111,10 @@ export default class QRCodeScanner extends Component<Props> {
         locationCompleted: true,
         longitude: position.coords.longitude,
         latitude: position.coords.latitude,
-        accuracy: position.coords.accuracy
+        accuracy: position.coords.accuracy,
+        // longitude: 0,
+        // latitude: 0,
+        // accuracy: 0
       })
     }
 
@@ -161,7 +164,9 @@ export default class QRCodeScanner extends Component<Props> {
     while (this.state.locationCompleted === false) {
 
     }
-
+    this.setState({
+      processing: true,
+    })
     if (this.state.longitude === 0 || this.state.latitude === 0) {
       Alert.alert('Notice', 'Loading location info failed', [{
         text: 'Ok',
@@ -169,11 +174,10 @@ export default class QRCodeScanner extends Component<Props> {
           this.goBackToLifeUp()
         }
       }], {cancelable: false})
+      return;
     }
 
-    this.setState({
-      processing: true,
-    })
+
     const callback = async () => {
       try {
         let data = {
